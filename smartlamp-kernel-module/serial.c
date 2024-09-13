@@ -1,6 +1,7 @@
 #include <linux/module.h>
 #include <linux/usb.h>
 #include <linux/slab.h>
+#include <linux/string.h>
 
 MODULE_AUTHOR("DevTITANS <devtitans@icomp.ufam.edu.br>");
 MODULE_DESCRIPTION("Driver de acesso ao SmartLamp (ESP32 com Chip Serial CP2102");
@@ -15,8 +16,8 @@ static uint usb_in, usb_out;                       // Endereços das portas de e
 static char *usb_in_buffer, *usb_out_buffer;       // Buffers de entrada e saída da USB
 static int usb_max_size;                           // Tamanho máximo de uma mensagem USB
 
-#define VENDOR_ID   SUBSTITUA_PELO_VENDORID /* Encontre o VendorID  do smartlamp */
-#define PRODUCT_ID  SUBSTITUA_PELO_PRODUCTID /* Encontre o ProductID do smartlamp */
+#define VENDOR_ID   0x10c4 /* Encontre o VendorID  do smartlamp */
+#define PRODUCT_ID  0xea60
 static const struct usb_device_id id_table[] = { { USB_DEVICE(VENDOR_ID, PRODUCT_ID) }, {} };
 
 static int  usb_probe(struct usb_interface *ifce, const struct usb_device_id *id); // Executado quando o dispositivo é conectado na USB
@@ -67,7 +68,11 @@ static void usb_disconnect(struct usb_interface *interface) {
 
 static int usb_read_serial() {
     int ret, actual_size;
-    int retries = 10;                       // Tenta algumas vezes receber uma resposta da USB. Depois desiste.
+    int retries = 10;
+    //int i;
+    //int n = 4;
+    //char aux[10];
+    // Tenta algumas vezes receber uma respŚosta da USB. Depois desiste.
 
     // Espera pela resposta correta do dispositivo (desiste depois de várias tentativas)
     while (retries > 0) {
@@ -79,9 +84,22 @@ static int usb_read_serial() {
             printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Codigo: %d\n", ret, retries--);
             continue;
         }
+        if(strcasestr(usb_in_buffer, "RES GET_LDR") {
+            //printk("", );
+            //if(n > actual_size) {
+            //    n = actual_size;
+            //}
+            //strncpy(aux, usb_in_buffer + actual_size - n, n);
+            //aux[n] = '\0';
+            printk("%s\n", usb_in_buffer);
 
-        //caso tenha recebido a mensagem 'RES_LDR X' via serial acesse o buffer 'usb_in_buffer' e retorne apenas o valor da resposta X
-        //retorne o valor de X em inteiro
+            //for(i=0; i < actual_size; i++) {
+            //    printk("%c", usb_in_buffer[i]);
+            //}
+            //printk("\n");
+            //caso tenha recebido a mensagem 'RES_LDR X' via serial acesse o buffer 'usb_in_buffer' e retorne apenas o valor da resposta X
+            //retorne o valor de X em inteiro
+        }
         return 0;
     }
 
