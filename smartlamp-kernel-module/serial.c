@@ -72,6 +72,8 @@ static int usb_read_serial() {
     //int i;
     //int n = 4;
     //char aux[10];
+    int index, newIndex = 0;
+    char aux[20];
     // Tenta algumas vezes receber uma respŚosta da USB. Depois desiste.
 
     // Espera pela resposta correta do dispositivo (desiste depois de várias tentativas)
@@ -84,14 +86,31 @@ static int usb_read_serial() {
             printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Codigo: %d\n", ret, retries--);
             continue;
         }
-        if(strcasecmp(usb_in_buffer, "RES GET_LDR")) {
+        
+        // while (strstr(aux, "RES GET_LDR") == NULL) {
+        //     for(index=0; index < actual_size; index++) {
+        //         if (usb_in_buffer[index] != '\n') {
+        //             aux[newIndex] = usb_in_buffer[index];
+        //             newIndex++;
+        //         }
+        //         else {
+        //             if (strstr(aux, "RES GET_LDR") == NULL) {
+        //                 memset(aux, 0, sizeof(aux));
+        //                 newIndex = 0;
+        //             } else {
+        //                 printk("%s\n", aux);
+        //             }
+        //         }
+        //     }
+        // }
+        //if(strcasecmp(usb_in_buffer, "RES GET_LDR")) {
             //printk("", );
             //if(n > actual_size) {
             //    n = actual_size;
             //}
             //strncpy(aux, usb_in_buffer + actual_size - n, n);
             //aux[n] = '\0';
-            printk("%s\n", usb_in_buffer);
+            //printk("%s\n", usb_in_buffer);
 
             //for(i=0; i < actual_size; i++) {
             //    printk("%c", usb_in_buffer[i]);
@@ -99,7 +118,7 @@ static int usb_read_serial() {
             //printk("\n");
             //caso tenha recebido a mensagem 'RES_LDR X' via serial acesse o buffer 'usb_in_buffer' e retorne apenas o valor da resposta X
             //retorne o valor de X em inteiro
-        }
+        //}
         return 0;
     }
 
