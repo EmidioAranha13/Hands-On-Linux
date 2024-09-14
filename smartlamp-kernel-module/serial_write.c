@@ -12,7 +12,7 @@ MODULE_LICENSE("GPL");
 
 static struct usb_device *smartlamp_device;        // Referência para o dispositivo USB
 static uint usb_in, usb_out;                       // Endereços das portas de entrada e saida da USB
-static char *usb_in_buffer, *usb_out_buffer;       // Buffers de entrada e saída da USB
+static char *usb_in_buffer, *usb_out_buffer, *start;       // Buffers de entrada e saída da USB
 static int usb_max_size;                           // Tamanho máximo de uma mensagem USB
 static char *COMANDO_SMARTLAMP;
 static int VALOR;
@@ -23,6 +23,7 @@ static const struct usb_device_id id_table[] = { { USB_DEVICE(VENDOR_ID, PRODUCT
 
 static int  usb_probe(struct usb_interface *ifce, const struct usb_device_id *id); // Executado quando o dispositivo é conectado na USB
 static void usb_disconnect(struct usb_interface *ifce);                           // Executado quando o dispositivo USB é desconectado da USB
+static int  usb_read_serial(void);
 static int  usb_write_serial(char *cmd, int param);                                                   // Executado para ler a saida da porta serial
 
 MODULE_DEVICE_TABLE(usb, id_table);
@@ -53,7 +54,7 @@ static int usb_probe(struct usb_interface *interface, const struct usb_device_id
     usb_in_buffer = kmalloc(usb_max_size, GFP_KERNEL);
     usb_out_buffer = kmalloc(usb_max_size, GFP_KERNEL);
 
-    COMANDO_SMARTLAMP = "SET_LED 100";
+    COMANDO_SMARTLAMP = "SET_LED 0";
     VALOR = 100;
     usb_write_serial(COMANDO_SMARTLAMP, VALOR);
 
@@ -88,7 +89,6 @@ static int usb_write_serial(char *cmd, int param) {
     // resp_expected deve conter a resposta esperada do comando enviado e deve ser comparada com a resposta recebida
     sprintf(resp_expected, "RES %s", cmd);
 
-    printk("Smartlamp Expected Answer: %d\n", ret);
     printk("Smartlamp Received Answer: %s\n", resp_expected);
 
     return -1; 

@@ -2,6 +2,7 @@
 #include <linux/usb.h>
 #include <linux/slab.h>
 #include <linux/string.h>
+#include <linux/ctype.h>
 
 MODULE_AUTHOR("DevTITANS <devtitans@icomp.ufam.edu.br>");
 MODULE_DESCRIPTION("Driver de acesso ao SmartLamp (ESP32 com Chip Serial CP2102");
@@ -13,7 +14,7 @@ MODULE_LICENSE("GPL");
 
 static struct usb_device *smartlamp_device;        // Referência para o dispositivo USB
 static uint usb_in, usb_out;                       // Endereços das portas de entrada e saida da USB
-static char *usb_in_buffer, *usb_out_buffer;       // Buffers de entrada e saída da USB
+static char *usb_in_buffer, *usb_out_buffer, *start;       // Buffers de entrada e saída da USB
 static int usb_max_size;                           // Tamanho máximo de uma mensagem USB
 
 #define VENDOR_ID   0x10c4 /* Encontre o VendorID  do smartlamp */
@@ -69,9 +70,9 @@ static void usb_disconnect(struct usb_interface *interface) {
 static int usb_read_serial() {
     int ret, actual_size;
     int retries = 10;
-    //int i;
-    //int n = 4;
-    //char aux[10];
+    int aux_value;
+    char cmd[20] = "RES GET_LDR";
+    //char aux[50];
     // Tenta algumas vezes receber uma respŚosta da USB. Depois desiste.
 
     // Espera pela resposta correta do dispositivo (desiste depois de várias tentativas)
@@ -84,23 +85,13 @@ static int usb_read_serial() {
             printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Codigo: %d\n", ret, retries--);
             continue;
         }
-        if(strcasecmp(usb_in_buffer, "RES GET_LDR")) {
-            //printk("", );
-            //if(n > actual_size) {
-            //    n = actual_size;
-            //}
-            //strncpy(aux, usb_in_buffer + actual_size - n, n);
-            //aux[n] = '\0';
-            printk("%s\n", usb_in_buffer);
-
-            //for(i=0; i < actual_size; i++) {
-            //    printk("%c", usb_in_buffer[i]);
-            //}
-            //printk("\n");
-            //caso tenha recebido a mensagem 'RES_LDR X' via serial acesse o buffer 'usb_in_buffer' e retorne apenas o valor da resposta X
-            //retorne o valor de X em inteiro
+        start = strstr(usb_in_buffer, cmd);
+        printk(KERN_INFO "%s\n", usb_in_buffer);
+        if(start != NULL) {
+            sscanf(start + strlen(cmd), "%d", &aux_value);
+            printk("Value: %d", aux_value);
         }
-        return 0;
+        return aux_value;
     }
 
     return -1; 
