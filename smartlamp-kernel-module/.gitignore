@@ -1,2 +1,17 @@
 hs_err_pid115478.log
 ../arduinoinstall.sh
+
+Module.symvers
+modules.order
+serial.mod
+serial.mod.c
+serial.mod.o
+serial.o
+serial_write.mod
+.11539.tmp
+.25471.tmp
+.serial.ko.cmd
+.serial.mod.o.cmd
+.serial.o.cmd
+
+

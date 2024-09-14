@@ -84,7 +84,7 @@ static int usb_read_serial() {
             printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Codigo: %d\n", ret, retries--);
             continue;
         }
-        if(strcasestr(usb_in_buffer, "RES GET_LDR") {
+        if(strcasecmp(usb_in_buffer, "RES GET_LDR")) {
             //printk("", );
             //if(n > actual_size) {
             //    n = actual_size;
