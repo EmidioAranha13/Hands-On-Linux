@@ -12,7 +12,9 @@ MODULE_LICENSE("GPL");
 
 static struct usb_device *smartlamp_device;        // Referência para o dispositivo USB
 static uint usb_in, usb_out;                       // Endereços das portas de entrada e saida da USB
-static char *usb_in_buffer, *usb_out_buffer;       // Buffers de entrada e saída da USB
+static char *usb_in_buffer, *usb_out_buffer, *start;       // Buffers de entrada e saída da USB
+static ssize_t attr;
+static const char *attr_name;
 static int usb_max_size;                           // Tamanho máximo de uma mensagem USB
 
 #define VENDOR_ID   0x10c4 /* Encontre o VendorID  do smartlamp */
@@ -22,6 +24,7 @@ static const struct usb_device_id id_table[] = { { USB_DEVICE(VENDOR_ID, PRODUCT
 static int  usb_probe(struct usb_interface *ifce, const struct usb_device_id *id); // Executado quando o dispositivo é conectado na USB
 static void usb_disconnect(struct usb_interface *ifce);                           // Executado quando o dispositivo USB é desconectado da USB
 static int  usb_read_serial(void);   
+static int  usb_write_serial(char *cmd, int param);
 
 // Executado quando o arquivo /sys/kernel/smartlamp/{led, ldr} é lido (e.g., cat /sys/kernel/smartlamp/led)
 static ssize_t attr_show(struct kobject *sys_obj, struct kobj_attribute *attr, char *buff);
@@ -69,6 +72,7 @@ static int usb_probe(struct usb_interface *interface, const struct usb_device_id
     usb_out_buffer = kmalloc(usb_max_size, GFP_KERNEL);
 
     LDR_value = usb_read_serial();
+    attr = attr_show(sys_obj, &led_attribute, usb_in_buffer);
 
     printk("LDR Value: %d\n", LDR_value);
 
@@ -85,7 +89,10 @@ static void usb_disconnect(struct usb_interface *interface) {
 
 static int usb_read_serial() {
     int ret, actual_size;
-    int retries = 10;                       // Tenta algumas vezes receber uma resposta da USB. Depois desiste.
+    int retries = 10;
+    int aux_value;
+    char cmd[20] = "RES GET_LDR";
+    // Tenta algumas vezes receber uma respŚosta da USB. Depois desiste.
 
     // Espera pela resposta correta do dispositivo (desiste depois de várias tentativas)
     while (retries > 0) {
@@ -97,11 +104,39 @@ static int usb_read_serial() {
             printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Codigo: %d\n", ret, retries--);
             continue;
         }
-
-        //caso tenha recebido a mensagem 'RES_LDR X' via serial acesse o buffer 'usb_in_buffer' e retorne apenas o valor da resposta X
-        //retorne o valor de X em inteiro
-        return 0;
+        start = strstr(usb_in_buffer, cmd);
+        printk(KERN_INFO "%s\n", usb_in_buffer);
+        if(start != NULL) {
+            sscanf(start + strlen(cmd), "%d", &aux_value);
+        }
+        printk("Value: %d", aux_value);
+        return aux_value;
     }
+    return -1;
+}
+
+static int usb_write_serial(char *cmd, int param) {
+    int ret, actual_size;    
+    char resp_expected[MAX_RECV_LINE] = "RES SET_LED 1";      // Resposta esperada do comando  
+
+    sprintf(usb_out_buffer, cmd); //use a variavel usb_out_buffer para armazernar o comando em formato de texto que o firmware reconheça
+
+    printk("Smartlamp Command: %s\n", usb_out_buffer);
+
+    // Grave o valor de usb_out_buffer com printk
+
+    // Envie o comando pela porta Serial
+    ret = usb_bulk_msg(smartlamp_device, usb_sndbulkpipe(smartlamp_device, usb_out), usb_out_buffer, strlen(usb_out_buffer), &actual_size, 1000*HZ);
+    if (ret) {
+        printk(KERN_ERR "SmartLamp: Erro de codigo %d ao enviar comando!\n", ret);
+        return -1;
+    }
+
+    // Use essa variavel para fazer a integração com a função usb_read_serial
+    // resp_expected deve conter a resposta esperada do comando enviado e deve ser comparada com a resposta recebida
+    sprintf(resp_expected, "RES %s", cmd);
+
+    printk("Smartlamp Received Answer: %s\n", resp_expected);
 
     return -1; 
 }
@@ -109,9 +144,10 @@ static int usb_read_serial() {
 // Executado quando o arquivo /sys/kernel/smartlamp/{led, ldr} é lido (e.g., cat /sys/kernel/smartlamp/led)
 static ssize_t attr_show(struct kobject *sys_obj, struct kobj_attribute *attr, char *buff) {
     // value representa o valor do led ou ldr
-    int value = -1;
+    int value = usb_read_serial();
     // attr_name representa o nome do arquivo que está sendo lido (ldr ou led)
-    const char *attr_name = attr->attr.name;
+    attr->attr.name = "DevTITANS";
+    attr_name = attr->attr.name;
 
     // printk indicando qual arquivo está sendo lido
     printk(KERN_INFO "SmartLamp: Lendo %s ...\n", attr_name);
@@ -128,7 +164,7 @@ static ssize_t attr_show(struct kobject *sys_obj, struct kobj_attribute *attr, c
 // Executado quando o arquivo /sys/kernel/smartlamp/{led, ldr} é escrito (e.g., echo "100" | sudo tee -a /sys/kernel/smartlamp/led)
 static ssize_t attr_store(struct kobject *sys_obj, struct kobj_attribute *attr, const char *buff, size_t count) {
     long ret, value;
-    const char *attr_name = attr->attr.name;
+    attr_name = attr->attr.name;
 
     // Converte o valor recebido para long
     ret = kstrtol(buff, 10, &value);
