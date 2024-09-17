@@ -89,7 +89,6 @@ static int usb_read_serial() {
         printk(KERN_INFO "%s\n", usb_in_buffer);
         if(start != NULL) {
             sscanf(start + strlen(cmd), "%d", &aux_value);
-            printk("Value: %d", aux_value);
         }
         return aux_value;
     }

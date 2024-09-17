@@ -22,7 +22,7 @@ void setup() {
     analogSetAttenuation(ADC_11db);
     analogWrite(ledPin, map(ledValue, 0, 100, 0,255));
     Serial.printf("SmartLamp Initialized.\n");
-    processCommand("GET_LDR", "");
+    //processCommand("GET_LDR", "");
 }
 
 // Função loop será executada infinitamente pelo ESP32
