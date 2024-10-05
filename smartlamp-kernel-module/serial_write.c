@@ -15,7 +15,7 @@ static uint usb_in, usb_out;                       // Endereços das portas de e
 static char *usb_in_buffer, *usb_out_buffer;       // Buffers de entrada e saída da USB
 static int usb_max_size;                           // Tamanho máximo de uma mensagem USB
 static char *COMANDO_SMARTLAMP;
-static char *COMANDO_SMARTLAMP1;
+//static char *COMANDO_SMARTLAMP1;
 static int VALOR;
 
 #define VENDOR_ID   0x10c4 /* Encontre o VendorID  do smartlamp */
@@ -54,11 +54,11 @@ static int usb_probe(struct usb_interface *interface, const struct usb_device_id
     usb_in_buffer = kmalloc(usb_max_size, GFP_KERNEL);
     usb_out_buffer = kmalloc(usb_max_size, GFP_KERNEL);
 
-    COMANDO_SMARTLAMP = "SET_LED 100";
-    COMANDO_SMARTLAMP1 = "GET_LDR";
+    COMANDO_SMARTLAMP = "SET_LED 0";
+    //COMANDO_SMARTLAMP1 = "GET_LDR";
     VALOR = 100;
     usb_write_serial(COMANDO_SMARTLAMP, VALOR);
-    usb_write_serial(COMANDO_SMARTLAMP1, VALOR);
+    //usb_write_serial(COMANDO_SMARTLAMP1, VALOR);
 
     return 0;
 }

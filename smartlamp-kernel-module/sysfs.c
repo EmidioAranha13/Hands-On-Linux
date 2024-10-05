@@ -16,13 +16,13 @@ static uint usb_in, usb_out;                       // Endereços das portas de e
 static char *usb_in_buffer, *usb_out_buffer;       // Buffers de entrada e saída da USB
 static int usb_max_size;                           // Tamanho máximo de uma mensagem USB
 
-#define VENDOR_ID   SUBSTITUA_PELO_VENDORID
-#define PRODUCT_ID  SUBSTITUA_PELO_PRODUCTID
+#define VENDOR_ID   0x10c4 /* Encontre o VendorID  do smartlamp */
+#define PRODUCT_ID  0xea60 /* Encontre o ProductID do smartlamp */
 static const struct usb_device_id id_table[] = { { USB_DEVICE(VENDOR_ID, PRODUCT_ID) }, {} };
 
 static int  usb_probe(struct usb_interface *ifce, const struct usb_device_id *id); 
 static void usb_disconnect(struct usb_interface *ifce);
-static int  usb_read_serial(void);   
+//static int  usb_read_serial(void);   
 
 // Função chamada ao ler os arquivos led e ldr
 static ssize_t attr_show(struct kobject *sys_obj, struct kobj_attribute *attr, char *buff) {
@@ -94,9 +94,9 @@ static int usb_probe(struct usb_interface *interface, const struct usb_device_id
     usb_in_buffer = kmalloc(usb_max_size, GFP_KERNEL);
     usb_out_buffer = kmalloc(usb_max_size, GFP_KERNEL);
 
-    LDR_value = usb_read_serial();
+    //LDR_value = usb_read_serial();
 
-    printk("LDR Value: %d\n", LDR_value);
+    //printk("LDR Value: %d\n", LDR_value);
 
     return 0;
 }

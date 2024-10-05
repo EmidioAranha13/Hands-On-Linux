@@ -83,6 +83,9 @@ static int usb_read_serial() {
             continue;
         }
 
+        printk("Buffer: %s ", usb_in_buffer);
+        printk("Expected command: %s", cmd);
+        
         // Verifica se a resposta contém o comando esperado
         start = strstr(usb_in_buffer, cmd);
         if (start != NULL) {
