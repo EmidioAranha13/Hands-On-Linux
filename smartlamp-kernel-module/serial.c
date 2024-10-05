@@ -70,28 +70,33 @@ static void usb_disconnect(struct usb_interface *interface) {
 static int usb_read_serial() {
     int ret, actual_size;
     int retries = 10;
-    int aux_value;
-    char cmd[20] = "RES GET_LDR";
-    //char aux[50];
-    // Tenta algumas vezes receber uma respŚosta da USB. Depois desiste.
+    int ldr_value = -1; // Valor padrão em caso de falha
+    char cmd[20] = "RES GET_LDR";  // Comando esperado no início da resposta
 
-    // Espera pela resposta correta do dispositivo (desiste depois de várias tentativas)
+    // Tenta várias vezes receber uma resposta correta da USB
     while (retries > 0) {
         // Lê os dados da porta serial e armazena em usb_in_buffer
-            // usb_in_buffer - contem a resposta em string do dispositivo
-            // actual_size - contem o tamanho da resposta em bytes
         ret = usb_bulk_msg(smartlamp_device, usb_rcvbulkpipe(smartlamp_device, usb_in), usb_in_buffer, min(usb_max_size, MAX_RECV_LINE), &actual_size, 1000);
         if (ret) {
-            printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Codigo: %d\n", ret, retries--);
+            printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Código: %d\n", retries, ret);
+            retries--;
             continue;
         }
+
+        // Verifica se a resposta contém o comando esperado
         start = strstr(usb_in_buffer, cmd);
-        printk(KERN_INFO "%s\n", usb_in_buffer);
-        if(start != NULL) {
-            sscanf(start + strlen(cmd), "%d", &aux_value);
+        if (start != NULL) {
+            // Encontra o valor numérico que aparece depois do comando "RES GET_LDR"
+            if (sscanf(start + strlen(cmd), "%d", &ldr_value) == 1) {
+                printk(KERN_INFO "SmartLamp: Valor do LDR lido: %d\n", ldr_value);
+                return ldr_value;  // Retorna o valor do LDR
+            }
         }
-        return aux_value;
+        
+        retries--;
     }
 
-    return -1; 
+    // Se todas as tentativas falharem, retorna -1
+    printk(KERN_ERR "SmartLamp: Falha ao ler o valor do LDR após várias tentativas.\n");
+    return -1;
 }
