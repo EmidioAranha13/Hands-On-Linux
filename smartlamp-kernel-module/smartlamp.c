@@ -150,12 +150,11 @@ static int usb_send_cmd(char *cmd, int param) {
     return -1;
 }
 
-// Função chamada ao ler os arquivos led e ldr
+// Função chamada ao ler os arquivos led, ldr, temp, hum
 static ssize_t attr_show(struct kobject *sys_obj, struct kobj_attribute *attr, char *buff) {
     int result;
-    
+
     if (strcmp(attr->attr.name, "led") == 0) {
-        // Envia o comando GET_LED com o parâmetro -1
         result = usb_send_cmd("GET_LED", -1);
         if (result >= 0) {
             return sprintf(buff, "%d\n", result);  // Retorna o valor do LED lido
@@ -163,16 +162,33 @@ static ssize_t attr_show(struct kobject *sys_obj, struct kobj_attribute *attr, c
         printk(KERN_ERR "SmartLamp: Falha ao ler o valor do LED.\n");
         return -EIO;  // Retorna erro de I/O se a leitura falhar
     } else if (strcmp(attr->attr.name, "ldr") == 0) {
-        // Envia o comando GET_LDR com o parâmetro -1
         result = usb_send_cmd("GET_LDR", -1);
         if (result >= 0) {
             return sprintf(buff, "%d\n", result);  // Retorna o valor do LDR lido
         }
         printk(KERN_ERR "SmartLamp: Falha ao ler o valor do LDR.\n");
         return -EIO;  // Retorna erro de I/O se a leitura falhar
+    } else if (strcmp(attr->attr.name, "temp") == 0) {
+        // Envia o comando GET_TEMP com o parâmetro -1
+        result = usb_send_cmd("GET_TEMP", -1);
+        if (result >= 0) {
+            return sprintf(buff, "%d\n", result);  // Retorna o valor da temperatura lida
+        }
+        printk(KERN_ERR "SmartLamp: Falha ao ler o valor da temperatura.\n");
+        return -EIO;  // Retorna erro de I/O se a leitura falhar
+    } else if (strcmp(attr->attr.name, "hum") == 0) {
+        // Envia o comando GET_HUM com o parâmetro -1
+        result = usb_send_cmd("GET_HUM", -1);
+        if (result >= 0) {
+            return sprintf(buff, "%d\n", result);  // Retorna o valor da umidade lida
+        }
+        printk(KERN_ERR "SmartLamp: Falha ao ler o valor da umidade.\n");
+        return -EIO;  // Retorna erro de I/O se a leitura falhar
     }
+    
     return 0;
 }
+
 
 
 // Essa função não deve ser alterada durante a task sysfs
