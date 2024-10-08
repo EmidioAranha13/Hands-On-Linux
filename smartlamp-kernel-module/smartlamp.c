@@ -124,9 +124,24 @@ static int usb_send_cmd(char *cmd, int param) {
         // Lê os dados da porta serial e armazena em usb_in_buffer
         ret = usb_bulk_msg(smartlamp_device, usb_rcvbulkpipe(smartlamp_device, usb_in), usb_in_buffer, min(usb_max_size, MAX_RECV_LINE), &actual_size, 1000);
         if (ret) {
-            printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Código: %d\n", retries, ret);
+            //printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Código: %d\n", retries, ret);
             retries--;
-            continue;   
+            if (strchr(temp_buffer, '\n') != NULL) {
+            printk("Buffer temporario: %s", temp_buffer);
+            start_cmd = strstr(temp_buffer, resp_expected);
+                if (start_cmd != NULL) {
+                    // Tenta encontrar o número após a resposta esperada, sem mover ponteiros originais
+                    char *param_position = start_cmd + strlen(resp_expected);
+                
+                    // Tenta encontrar o número após a substring e armazená-lo em resp_number
+                    if (sscanf(param_position, "%d", &resp_number) == 1) {
+                        printk(KERN_INFO "SmartLamp: Valor do comando lido: %d\n", resp_number);
+                        return resp_number;  // Retorna o valor obtido
+                    } else {
+                        printk(KERN_ERR "SmartLamp: Falha ao extrair o valor após o comando esperado.\n");
+                    }
+                } 
+            } 
         }
 
         printk("Buffer: %s", usb_in_buffer);
@@ -134,26 +149,6 @@ static int usb_send_cmd(char *cmd, int param) {
         // Acumula o conteúdo lido no temp_buffer até encontrar '\n'
         strncat(temp_buffer, usb_in_buffer, actual_size);
 
-        // Verifica se o buffer temporário contém um fim de linha
-        //printk("Buffer temporario: %s", temp_buffer);
-
-        // Verifica se o buffer contém o comando esperado
-        if (strchr(temp_buffer, '\n') != NULL) {
-            printk("Buffer temporario: %s", temp_buffer);
-            start_cmd = strstr(temp_buffer, resp_expected);
-            if (start_cmd != NULL) {
-                // Tenta encontrar o número após a resposta esperada, sem mover ponteiros originais
-                char *param_position = start_cmd + strlen(resp_expected);
-            
-                // Tenta encontrar o número após a substring e armazená-lo em resp_number
-                if (sscanf(param_position, "%d", &resp_number) == 1) {
-                    printk(KERN_INFO "SmartLamp: Valor do comando lido: %d\n", resp_number);
-                    return resp_number;  // Retorna o valor obtido
-                } else {
-                    printk(KERN_ERR "SmartLamp: Falha ao extrair o valor após o comando esperado.\n");
-                }
-            }
-        }
         retries--;
     }
 
