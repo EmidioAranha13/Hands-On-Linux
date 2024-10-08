@@ -1,0 +1,1 @@
+cmd_/home/devtitans-2/Hands-On-Linux/smartlamp-kernel-module/smartlamp.mod := { echo  /home/devtitans-2/Hands-On-Linux/smartlamp-kernel-module/smartlamp.o;  echo; } > /home/devtitans-2/Hands-On-Linux/smartlamp-kernel-module/smartlamp.mod
